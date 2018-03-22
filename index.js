@@ -6,10 +6,12 @@ const withLazyLoad = configObject => {
   }
 
   if (typeof configObject.lazyComponent !== 'function') {
-    throw new Error('Lazy component must be a function that returns promise');
+    throw new Error('Lazy component must be a function that returns promise.');
   }
-
-  const { lazyComponent } = configObject;
+  const defaultLoadingComponent = () => {
+    return <div>Please Wait...</div>;
+  };
+  const { lazyComponent, loadingComponent = defaultLoadingComponent } = configObject;
 
   const promiseModule = () => lazyComponent();
 
@@ -25,7 +27,7 @@ const withLazyLoad = configObject => {
       .then(loadedComponent => {
         closureState.isLoading = false;
         closureState.loadedComponent = loadedComponent;
-        
+
         return loadedComponent;
       })
       .catch(error => {
@@ -33,27 +35,27 @@ const withLazyLoad = configObject => {
         closureState.errorLoading = true;
         throw error;
       });
-    
-    return closureState;  
+
+    return closureState;
   };
-  
+
   let result = null;
-  
+
   const start = () => {
     if (!result) {
       result = setup();
     }
-    
+
     return result.promise;
   };
-  
+
   return class LazyComponent extends Component {
-    
     state = {
       isLoading: true,
       loadedComponent: null,
-      errorLoading: false
-    }
+      errorLoading: false,
+      renderLoader: false
+    };
 
     constructor(props) {
       super(props);
@@ -78,21 +80,33 @@ const withLazyLoad = configObject => {
             isLoading: false
           });
         });
+
+      this.timer = setTimeout(() => {
+        this.setState({
+          renderLoader: true
+        });
+      }, 20);
     }
 
     render() {
-      const { isLoading, loadedComponent: LoadedComponent, errorLoading } = this.state;
+      const { isLoading, loadedComponent: LoadedComponent, errorLoading, renderLoader } = this.state;
 
-      if (isLoading) {
-        return <div> Component Loading </div>;
+      if (isLoading && renderLoader) {
+        return loadingComponent();
       }
-      if (!isLoading && errorLoading) {
+      if ((isLoading && !renderLoader) || (!isLoading && errorLoading)) {
         return null;
       }
-      
+
       return <LoadedComponent {...this.props} />;
     }
   };
+};
+
+withLazyLoad.awaitOn = function(func) {
+  return withLazyLoad({
+    lazyComponent: func
+  });
 };
 
 export default withLazyLoad;
