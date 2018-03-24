@@ -59,12 +59,12 @@ const withLazyLoad = configObject => {
 
     constructor(props) {
       super(props);
-      // promise is launched
+      // initiate promise
       start();
     }
 
     componentWillMount() {
-      // here we load the module during runtime
+
       const promise = start();
 
       promise
@@ -85,7 +85,7 @@ const withLazyLoad = configObject => {
         this.setState({
           renderLoader: true
         });
-      }, 20);
+      }, 100);
     }
 
     render() {
