@@ -89,7 +89,12 @@ const withLazyLoad = configObject => {
     }
 
     render() {
-      const { isLoading, loadedComponent: LoadedComponent, errorLoading, renderLoader } = this.state;
+      const { 
+        isLoading, 
+        loadedComponent: LoadedComponent,
+        errorLoading,
+        renderLoader
+      } = this.state;
 
       if (isLoading && renderLoader) {
         return loadingComponent();
